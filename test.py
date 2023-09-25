@@ -2,13 +2,13 @@
 import matplotlib.pyplot as plt
 from functions.kmeans import KMeans
 from functions.data_by_country import data_by_country
-from utils.data_loader import load_data
+from utils.data_loader import load_data_parquet
 import sklearn.cluster as sk
 import numpy as np
 
 # %%
 # Load your dataset
-df = load_data()
+df = load_data_parquet()
 df = data_by_country(df)
 df = df.pivot(index="dt", columns="Country",
               values='AverageTemperature').dropna()
