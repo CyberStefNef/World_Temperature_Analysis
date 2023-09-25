@@ -12,7 +12,7 @@ def load_data_csv():
 
 def load_data_parquet():
     """ Loading data from the data directory """
-    df = pd.read_parquet('data\GlobalLandTemperaturesByCity.parquet')
+    df = pd.read_parquet('data/GlobalLandTemperaturesByCity.parquet')
     df['dt'] = df['dt'].astype('datetime64[ns]')
     df['City'] = df['City'].astype('category')
     df['Country'] = df['Country'].astype('category')
