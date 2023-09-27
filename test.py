@@ -1,55 +1,112 @@
-# %%
-import matplotlib.pyplot as plt
-from functions.kmeans import KMeans
-from functions.data_by_country import data_by_country
+import dash
+from dash import dcc, html, Input, Output
 from utils.data_loader import load_data_parquet
-import sklearn.cluster as sk
+from functions.data_by_country import data_by_country
+from sklearn.preprocessing import MinMaxScaler
+from statsmodels.tsa.seasonal import seasonal_decompose
+import pandas as pd
+import plotly.graph_objs as go
 import numpy as np
+import plotly.express as px
+from sklearn.cluster import KMeans
 
-# %%
-# Load your dataset
 df = load_data_parquet()
 df = data_by_country(df)
 df = df.pivot(index="dt", columns="Country",
               values='AverageTemperature').dropna()
-data = df.loc["2013-01-01"] - df.loc["1889-01-01"]
-data = data.sort_values()
 
-# %%
+trend_components = {}
+slopes = {}
+for country in df.columns:
+    result = seasonal_decompose(df[country], model='additive', period=12)
+    trend_components[country] = result.trend.dropna()
 
-kmeansSK = sk.KMeans(n_clusters=4)
-resultSK = kmeansSK.fit(np.array(data).reshape(-1, 1))
+all_trends = pd.concat(trend_components, axis=1)
+scaler = MinMaxScaler()
+all_normalized_trends = pd.DataFrame(scaler.fit_transform(
+    all_trends), index=all_trends.index, columns=all_trends.columns)
 
-# %%
-plt.figure(figsize=(10, 6))
-for i in range(resultSK.n_clusters):
-    plt.scatter(np.array(data)[resultSK.labels_ == i], [
-                1]*sum(resultSK.labels_ == i), label=f'Cluster {i+1}')
-plt.scatter(resultSK.cluster_centers_, [
-            1]*len(resultSK.cluster_centers_), c='red', marker='X', s=100, label='Centroids')
-plt.yticks([])
-plt.title('KMeans Clustering Results')
-plt.xlabel('Data Points')
-plt.legend()
-plt.show()
+# Calculate the slope based on the normalized trend
+for country in all_normalized_trends.columns:
+    x_data = range(len(all_normalized_trends[country]))
+    y_data = all_normalized_trends[country].dropna().values
 
-# %%
-kmeans = KMeans()
-result = kmeans.fit(data)
-print(result)
+    slope, _ = np.polyfit(x_data, y_data, 1)
+    slopes[country] = slope
 
-# %%
+sorted_countries = sorted(slopes, key=slopes.get, reverse=True)
 
-plt.figure(figsize=(10, 1))
-plt.scatter(result[0], [1]*len(result[0]), marker='o')
-plt.scatter(result[1], [1]*len(result[1]), marker='o')
-plt.scatter(result[2], [1]*len(result[2]), marker='o')
-plt.scatter(kmeans.centroids, [1]*3, marker='x')
-plt.yticks([])  # Hide y-axis ticks
-plt.title('Distribution of Temperatures')
-plt.xlabel('Temperature')
-plt.show()
+# Calculate growth rate as slopes for each country
+slopes_arr = np.array(list(slopes.values())).reshape(-1, 1)
 
-print("test")
+# Applying KMeans clustering
+n_clusters = 3  # You can change this to a different number of clusters if desired
+kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(slopes_arr)
 
-# %%
+# Assign cluster label to each country
+clusters = {}
+for idx, country in enumerate(sorted_countries):
+    clusters[country] = kmeans.labels_[idx]
+
+# Dash app
+app = dash.Dash(__name__)
+
+app.layout = html.Div([
+    html.H1('Normalized Trend Component for Selected Countries'),
+    dcc.Dropdown(
+        id='country-dropdown',
+        options=[{'label': f"{country} (Cluster: {clusters[country]}, Growth: {slopes[country]:.4f})", 'value': country}
+                 for country in sorted_countries],
+        value=['Canada'],
+        multi=True
+    ),
+    dcc.Graph(id='trend-graph'),
+    dcc.Graph(id='slope-graph')
+])
+
+
+@app.callback(
+    [Output('trend-graph', 'figure'),
+     Output('slope-graph', 'figure')],
+    [Input('country-dropdown', 'value')]
+)
+def update_graph(selected_countries):
+    traces = []
+
+    for country in selected_countries:
+        x_data = range(len(all_normalized_trends))
+        y_data = all_normalized_trends[country].dropna()
+
+        slope, intercept = np.polyfit(x_data, y_data, 1)
+        reg_line = slope * np.array(x_data) + intercept
+
+        traces.append(
+            go.Scatter(x=all_normalized_trends.index,
+                       y=y_data, mode='lines', name=country)
+        )
+        traces.append(
+            go.Scatter(x=all_normalized_trends.index, y=reg_line, mode='lines',
+                       name=f"{country} (Linear Fit)", line=dict(dash='dash'))
+        )
+
+    # Creating cluster-colored slope graph
+    colors = px.colors.qualitative.Set1
+    bar_colors = [colors[clusters[country] % len(colors)]
+                  for country in sorted_countries]
+    slope_fig = go.Figure(
+        data=[
+            go.Bar(x=list(slopes.keys()), y=list(
+                slopes.values()), marker=dict(color=bar_colors))
+        ],
+        layout=go.Layout(title="Growth Rates for Each Country by Cluster", xaxis=dict(
+            title='Country'), yaxis=dict(title='Growth Rate'), xaxis_categoryorder='total descending')
+    )
+
+    return {
+        'data': traces,
+        'layout': go.Layout(title="Normalized Trend Component with Linear Regression for Selected Countries", xaxis=dict(title='Year'), yaxis=dict(title='Normalized Temperature Trend'))
+    }, slope_fig
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
