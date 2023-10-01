@@ -66,12 +66,14 @@ def ARMA(df,p,q):
     intercept = result[1]
 
     # Generate predictions for the training set
+    df_train_2 = df_train_2.copy()
     df_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef, intercept)
 
     # Prepare lagged features for the testing set
     X_test = df_test.iloc[:, 1:].values.reshape(-1, p)
 
     # Generate predictions for the testing set
+    df_test = df_test.copy()
     df_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef, intercept)
 
 
@@ -107,12 +109,14 @@ def ARMA(df,p,q):
     intercept2 = result2[1]
 
     # Generate predictions for the training set
+    res_train_2 = res_train_2.copy()
     res_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef2, intercept2)
 
     # Prepare lagged residuals for the testing set
     X_test = res_test.iloc[:, 1:].values.reshape(-1, q)
 
     # Generate predictions for the testing set
+    res_test = res_test.copy()
     res_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef2, intercept2)
     
     # Calculate RMSE and MSE to evaluate model performance
@@ -129,5 +133,4 @@ def ARMA(df,p,q):
     # Adding the predicted data from res to the AR part (ARMA)
     df_ar.Predicted_Values += res_c.Predicted_Values
     
-    #df_c[['AverageTemperature','Predicted_Values']]
     return [df_ar,MSE,RMSE]

@@ -6,7 +6,7 @@ from functions.ols_pred import predict_ols_linear_regression
 from sklearn.metrics import mean_squared_error
 
 
-def AR(p, df):
+def AR(df, p):
     """
     Perform Autoregressive (AR) Time Series Analysis.
 
@@ -16,10 +16,10 @@ def AR(p, df):
     Squared Error (RMSE) and Mean Squared Error (MSE) to assess model performance.
 
     Parameters:
-    - p (int): The order of the Autoregressive (AR) model, representing the number of lagged
-      values to consider.
     - df (pandas DataFrame): The input DataFrame containing a 'Date' column and a target variable
       'AverageTemperature'.
+    - p (int): The order of the Autoregressive (AR) model, representing the number of lagged
+      values to consider.
 
     Returns:
     - List: A list containing the following elements:
@@ -39,9 +39,7 @@ def AR(p, df):
     - Residuals are calculated for potential use in a Moving Average (MA) model.
 
     Example:
-    [df_train_2, df_test, coef, intercept, RMSE, MSE, res] = AR(3, df_temperature_data)
-    print("The RMSE is:", RMSE)
-    print("The order of the AR model is 3.")
+    [df_train_2, df_test, coef, intercept, RMSE, MSE, res] = AR(df_temperature_data, 3)
     """
     # Copy the input DataFrame to avoid modifying the original data
     df_temp = df.copy()
@@ -54,8 +52,8 @@ def AR(p, df):
     train_size = (int)(0.8 * df_temp.shape[0])
 
     # Split the data into training and testing sets
-    df_train = pd.DataFrame(df_temp[0:train_size])
-    df_test = pd.DataFrame(df_temp[train_size:df.shape[0]])
+    df_train = pd.DataFrame(df_temp.iloc[0:train_size])  # Use .iloc to explicitly create a new DataFrame
+    df_test = pd.DataFrame(df_temp.iloc[train_size:df_temp.shape[0]])  # Use .iloc to explicitly create a new DataFrame
 
     # Remove rows with missing values in the training set
     df_train_2 = df_train.dropna()
@@ -70,12 +68,14 @@ def AR(p, df):
     intercept = result[1]
 
     # Generate predictions for the training set
+    df_train_2 = df_train_2.copy()
     df_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef, intercept)
 
     # Prepare lagged features for the testing set
     X_test = df_test.iloc[:, 1:].values.reshape(-1, p)
 
     # Generate predictions for the testing set
+    df_test = df_test.copy()
     df_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef, intercept)
 
     # Calculate RMSE and MSE to evaluate model performance
@@ -90,6 +90,6 @@ def AR(p, df):
     res['Residuals'] = df_ar['AverageTemperature'] - df_ar['Predicted_Values']
 
     # Print RMSE and order of the AR model
-    print("The RMSE is :", RMSE,", Value of p : ",p)
+    print("The RMSE is :", RMSE, ", Value of p : ", p)
 
     return [df_train_2, df_test, coef, intercept, RMSE, MSE, res]

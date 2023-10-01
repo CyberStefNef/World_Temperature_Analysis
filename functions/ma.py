@@ -6,7 +6,7 @@ from functions.ols_pred import predict_ols_linear_regression
 from sklearn.metrics import mean_squared_error
 
 
-def MA(q, res):
+def MA(res,q):
     """
     Perform Moving Average (MA) Time Series Analysis.
 
@@ -16,10 +16,10 @@ def MA(q, res):
     coefficients for the MA model, and calculates the Root Mean Squared Error (RMSE) for model evaluation.
 
     Parameters:
-    - q (int): The order of the Moving Average (MA) model, representing the number of lagged
-      residuals to consider.
     - res (pandas DataFrame): The input DataFrame containing a 'Residuals' column from a previous
       model.
+    - q (int): The order of the Moving Average (MA) model, representing the number of lagged
+      residuals to consider.
 
     Returns:
     - List: A list containing the following elements:
@@ -36,7 +36,7 @@ def MA(q, res):
     - The RMSE is computed to evaluate model performance.
 
     Example:
-    [res_train_2, res_test, coef, intercept, RMSE] = MA(3, df_residuals)
+    [res_train_2, res_test, coef, intercept,MSE, RMSE] = MA(df_residuals,3)
     print("The RMSE is:", RMSE)
     print("The order of the MA model is 3.")
     """
@@ -64,20 +64,22 @@ def MA(q, res):
     intercept = result[1]
 
     # Generate predictions for the training set
+    res_train_2 = res_train_2.copy()
     res_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef, intercept)
 
     # Prepare lagged residuals for the testing set
     X_test = res_test.iloc[:, 1:].values.reshape(-1, q)
 
     # Generate predictions for the testing set
+    res_test = res_test.copy()
     res_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef, intercept)
 
     # Calculate RMSE and MSE to evaluate model performance
-    MSE = mean_squared_error(res_test['AverageTemperature'], res_test['Predicted_Values'])
+    MSE = mean_squared_error(res_test['Residuals'], res_test['Predicted_Values'])
     RMSE = np.sqrt(MSE)
 
     # Print RMSE and order of the MA model
-    print("The RMSE is :", RMSE,", Value of p : ",q)
+    print("The RMSE is :", RMSE,", Value of q : ",q)
 
 
     return [res_train_2, res_test, coef, intercept,MSE, RMSE]
