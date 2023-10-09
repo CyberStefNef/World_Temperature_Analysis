@@ -50,3 +50,5 @@ def adf_check(time_series, autolag):
         print("Strong evidence against the null hypothesis, reject the null hypothesis. Data has no unit root and is stationary.")
     else:
         print("Weak evidence against the null hypothesis, time series has a unit root, indicating it is non-stationary.\n")
+        
+    return result    

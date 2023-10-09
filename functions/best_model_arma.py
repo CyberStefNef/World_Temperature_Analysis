@@ -55,4 +55,4 @@ def best_model_arma(df, p, q):
     print('The best model according to MSE is p = {}, q = {}, with MSE = {} !'.format(best_model_mse[0], best_model_mse[1], best_mse))
     print('The best model according to RMSE is p = {}, q = {}, with RMSE = {} !'.format(best_model_rmse[0], best_model_rmse[1], best_rmse))
 
-    #return best_model_mse, best_model_rmse
+    return best_model_mse, best_model_rmse
