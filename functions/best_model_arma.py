@@ -36,7 +36,7 @@ def best_model_arma(df, p, q):
         # Iterate through possible MA order values from 1 to q
         for ma_lag in range(1, q + 1):
             # Print the current (p, q) combination being tried
-            print(f"Trying AR lag = {ar_lag}, MA lag = {ma_lag}")
+            #print(f"Trying AR lag = {ar_lag}, MA lag = {ma_lag}")
             
             # Perform ARMA analysis with the current (p, q) combination and get MSE, RMSE
             [df_ar, MSE, RMSE] = ARMA(df, ar_lag, ma_lag)
@@ -51,8 +51,8 @@ def best_model_arma(df, p, q):
                 best_rmse = RMSE
                 best_model_rmse = (ar_lag, ma_lag)
 
-    # Print the best (p, q) orders along with corresponding MSE and RMSE
-    print('The best model according to MSE is p = {}, q = {}, with MSE = {} !'.format(best_model_mse[0], best_model_mse[1], best_mse))
-    print('The best model according to RMSE is p = {}, q = {}, with RMSE = {} !'.format(best_model_rmse[0], best_model_rmse[1], best_rmse))
+    # # Print the best (p, q) orders along with corresponding MSE and RMSE
+    # print('The best model according to MSE is p = {}, q = {}, with MSE = {} !'.format(best_model_mse[0], best_model_mse[1], best_mse))
+    # print('The best model according to RMSE is p = {}, q = {}, with RMSE = {} !'.format(best_model_rmse[0], best_model_rmse[1], best_rmse))
 
     return best_model_mse, best_model_rmse

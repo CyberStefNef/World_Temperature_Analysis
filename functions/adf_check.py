@@ -35,20 +35,20 @@ def adf_check(time_series, autolag):
     # Perform the Augmented Dickey-Fuller Test
     result = adfuller(time_series, autolag=autolag)
 
-    # Print the ADF test report
-    print('Augmented Dickey-Fuller Test:')
+    # # Print the ADF test report
+    # print('Augmented Dickey-Fuller Test:')
     
-    # Define labels for the ADF test result values
-    labels = ['ADF Test Statistic', 'p-value', 'Number of Lags Used', 'Number of Observations Used']
+    # # Define labels for the ADF test result values
+    # labels = ['ADF Test Statistic', 'p-value', 'Number of Lags Used', 'Number of Observations Used']
 
-    # Print each ADF test result along with its label
-    for value, label in zip(result, labels):
-        print(label + ' : ' + str(value))
+    # # Print each ADF test result along with its label
+    # for value, label in zip(result, labels):
+    #     print(label + ' : ' + str(value))
 
-    # Check the p-value and provide a conclusion
-    if result[1] <= 0.05:
-        print("Strong evidence against the null hypothesis, reject the null hypothesis. Data has no unit root and is stationary.")
-    else:
-        print("Weak evidence against the null hypothesis, time series has a unit root, indicating it is non-stationary.\n")
+    # # Check the p-value and provide a conclusion
+    # if result[1] <= 0.05:
+    #     print("Strong evidence against the null hypothesis, reject the null hypothesis. Data has no unit root and is stationary.")
+    # else:
+    #     print("Weak evidence against the null hypothesis, time series has a unit root, indicating it is non-stationary.\n")
         
     return result    

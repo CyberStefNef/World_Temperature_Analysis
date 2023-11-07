@@ -123,9 +123,9 @@ def ARMA(df,p,q):
     MSE = mean_squared_error(res_test['Residuals'], res_test['Predicted_Values'])
     RMSE = np.sqrt(MSE)
 
-    # Print RMSE and order of the MA model
-    print("The MSE is :", MSE,", Value of p : ",p, "Value of q :",q)
-    print("The RMSE is :", RMSE,", Value of p : ",p, "Value of q :",q)
+    # # Print RMSE and order of the MA model
+    # print("The MSE is :", MSE,", Value of p : ",p, "Value of q :",q)
+    # print("The RMSE is :", RMSE,", Value of p : ",p, "Value of q :",q)
     
     # Pediction
     res_c = pd.concat([res_train_2,res_test])
