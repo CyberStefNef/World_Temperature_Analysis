@@ -2,10 +2,8 @@
 
 import pandas as pd
 import numpy as np
-from functions.ols_linear_reg import ols_linear_regression
-from functions.ols_pred import predict_ols_linear_regression
 from sklearn.metrics import mean_squared_error
-
+from functions.ols import OLS
 
 def ARMA(df,p,q):
     
@@ -61,20 +59,19 @@ def ARMA(df,p,q):
     y_train = df_train_2.iloc[:, 0].values.reshape(-1, 1)
 
     # Apply linear regression to estimate AR model coefficients
-    result = ols_linear_regression(X_train, y_train)
-    coef = result[0]
-    intercept = result[1]
+    ols_ar = OLS()
+    ols_ar.fit(X_train, y_train)
 
     # Generate predictions for the training set
     df_train_2 = df_train_2.copy()
-    df_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef, intercept)
+    df_train_2['Predicted_Values'] = ols_ar.predict(X_train)
 
     # Prepare lagged features for the testing set
     X_test = df_test.iloc[:, 1:].values.reshape(-1, p)
 
     # Generate predictions for the testing set
     df_test = df_test.copy()
-    df_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef, intercept)
+    df_test['Predicted_Values'] = ols_ar.predict(X_test)
 
 
     # Concatenate training and testing data for residuals calculation
@@ -104,20 +101,19 @@ def ARMA(df,p,q):
     y_train = res_train_2.iloc[:, 0].values.reshape(-1, 1)
 
     # Apply linear regression to estimate MA model coefficients
-    result2 = ols_linear_regression(X_train, y_train)
-    coef2 = result2[0]
-    intercept2 = result2[1]
+    ols_ma = OLS()
+    ols_ma.fit(X_train, y_train)
 
     # Generate predictions for the training set
     res_train_2 = res_train_2.copy()
-    res_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef2, intercept2)
+    res_train_2['Predicted_Values'] = ols_ma.predict(X_train)
 
     # Prepare lagged residuals for the testing set
     X_test = res_test.iloc[:, 1:].values.reshape(-1, q)
 
     # Generate predictions for the testing set
     res_test = res_test.copy()
-    res_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef2, intercept2)
+    res_test['Predicted_Values'] = ols_ma.predict(X_test)
     
     # Calculate RMSE and MSE to evaluate model performance
     MSE = mean_squared_error(res_test['Residuals'], res_test['Predicted_Values'])

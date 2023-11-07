@@ -1,9 +1,8 @@
 
 import pandas as pd
 import numpy as np
-from functions.ols_linear_reg import ols_linear_regression
-from functions.ols_pred import predict_ols_linear_regression
 from sklearn.metrics import mean_squared_error
+from functions.ols import OLS
 
 
 def AR(df, p):
@@ -63,20 +62,22 @@ def AR(df, p):
     y_train = df_train_2.iloc[:, 0].values.reshape(-1, 1)
 
     # Apply linear regression to estimate AR model coefficients
-    result = ols_linear_regression(X_train, y_train)
-    coef = result[0]
-    intercept = result[1]
+    ols_model = OLS()
+    ols_model.fit(X_train, y_train)
+    coef = ols_model.coefficients
+    intercept = ols_model.intercept
 
     # Generate predictions for the training set
     df_train_2 = df_train_2.copy()
-    df_train_2['Predicted_Values'] = predict_ols_linear_regression(X_train, coef, intercept)
+    X_train = df_train_2.iloc[:, 1:].values.reshape(-1, p)
+    df_train_2['Predicted_Values'] = ols_model.predict(X_train)
 
     # Prepare lagged features for the testing set
     X_test = df_test.iloc[:, 1:].values.reshape(-1, p)
 
     # Generate predictions for the testing set
     df_test = df_test.copy()
-    df_test['Predicted_Values'] = predict_ols_linear_regression(X_test, coef, intercept)
+    df_test['Predicted_Values'] = ols_model.predict(X_test)
 
     # Calculate RMSE and MSE to evaluate model performance
     MSE = mean_squared_error(df_test['AverageTemperature'], df_test['Predicted_Values'])
