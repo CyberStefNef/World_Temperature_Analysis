@@ -13,7 +13,7 @@ class IsolationForest:
             self.trees.append(itree)
 
     def isolation_forest_anomaly_score(self, data, tree):
-        scores = np.array([self.anomaly_score(tree, point) for point in data])
+        scores = np.array([self.path_length(tree, point) for point in data])
         return 2 ** (-scores / len(self.trees))
 
     def isolation_tree(self, data, height=0, max_height=None):
@@ -37,12 +37,22 @@ class IsolationForest:
                 "right": self.isolation_tree(right_data, height + 1, max_height)
             }
 
-    def anomaly_score(self, tree, point, current_height=0):
+    def path_length(self, tree, point, current_height=0):
         if "split_attribute" not in tree:
-            return current_height + 2 * (np.log(2 ** tree["height"] - 1) + np.euler_gamma) - (2 * (tree["height"] - 1) / (2 ** tree["height"] - 1))
+            return current_height + self.anomaly_score(tree)
         else:
             split_attribute = tree["split_attribute"]
             if point[split_attribute] < tree["split_value"]:
-                return self.anomaly_score(tree["left"], point, current_height + 1)
+                return self.path_length(tree["left"], point, current_height + 1)
             else:
-                return self.anomaly_score(tree["right"], point, current_height + 1)
+                return self.path_length(tree["right"], point, current_height + 1)
+
+    def anomaly_score(self, tree):
+        if self.subsample_size == 2:
+            return 1
+        elif self.subsample_size < 2:
+            return 0
+        else:
+            return 2 * (np.log(2 ** tree["height"] - 1) + np.euler_gamma) - (2 * (tree["height"] - 1) / (2 ** tree["height"] - 1))
+            
+    
