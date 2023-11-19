@@ -8,10 +8,11 @@ import pandas as pd
 import plotly.graph_objs as go
 import numpy as np
 import plotly.express as px
-from sklearn.cluster import KMeans
+from functions.kmeans import KMeans
 
 df = load_data_parquet()
 df = data_by_country(df)
+df = df.dropna()
 df = df.pivot(index="dt", columns="Country",
               values='AverageTemperature').dropna()
 
@@ -41,7 +42,8 @@ slopes_arr = np.array(list(slopes.values())).reshape(-1, 1)
 
 # Applying KMeans clustering
 n_clusters = 3  # You can change this to a different number of clusters if desired
-kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(slopes_arr)
+kmeans = KMeans(k=n_clusters)
+kmeans.fit(slopes_arr)
 
 # Assign cluster label to each country
 clusters = {}

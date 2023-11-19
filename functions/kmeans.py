@@ -16,10 +16,7 @@ class KMeans:
         return data[indices]
 
     def __compute_inertia(self, data, centroids, labels):
-        inertia = 0
-        for i in range(len(data)):
-            inertia += np.linalg.norm(data[i] - centroids[labels[i]])**2
-        return inertia
+        return np.sum(np.linalg.norm(data - centroids[labels], axis=1)**2)
 
     def __compute_distances(self, data, centroids):
         """Compute distances between each data point and the centroids."""
